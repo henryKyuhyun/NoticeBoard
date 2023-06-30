@@ -45,6 +45,9 @@ dependencies {
     annotationProcessor "jakarta.persistence:jakarta.persistence-api"   // java.lang.NoClassDegFoundError (javax.annotation.Entity) 대응코드
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5'
 }
 
 
