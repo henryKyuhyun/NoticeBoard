@@ -1,2 +1,13 @@
-package com.example.noticeboardproject.controller;public class MainController {
+package com.example.noticeboardproject.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class MainController {
+
+    @GetMapping("/")
+    public String root(){
+        return "redirect:/articles";
+    }
 }
