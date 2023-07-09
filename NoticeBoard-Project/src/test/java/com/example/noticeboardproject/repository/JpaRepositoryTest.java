@@ -2,6 +2,7 @@ package com.example.noticeboardproject.repository;
 
 import com.example.noticeboardproject.config.JpaConfig;
 import com.example.noticeboardproject.domain.Article;
+import com.example.noticeboardproject.domain.UserAccount;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,25 +22,29 @@ class JpaRepositoryTest {
     private final ArticleRepository articleRepository;
     private final ArticleCommentRepository articleCommentRepository;
 
+    private final UserAccountRepository userAccountRepository;
+
     //밑에는 생성자 주입 패턴입
     public JpaRepositoryTest(@Autowired ArticleRepository articleRepository,
-                             @Autowired ArticleCommentRepository articleCommentRepository)
+                             @Autowired ArticleCommentRepository articleCommentRepository,
+                             @Autowired UserAccountRepository userAccountRepository)
     {
         this.articleRepository = articleRepository;
         this.articleCommentRepository = articleCommentRepository;
+        this.userAccountRepository = userAccountRepository;
     }
 
     @DisplayName("select Test")
     @Test
     void givenTestData_whenSelecting_thenWorkFine(){
 //        Given
-
+        long previousCount = articleRepository.count();
+        UserAccount userAccount = userAccountRepository.save(UserAccount.of("kyuhyun","pw",null,null,null));
+        Article article = Article.of(userAccount,"new article", "new content", "#spring");
 //        When
-        List<Article> articles = articleRepository.findAll();
+        articleRepository.save(article);
 //        Then
-        assertThat(articles)
-                .isNotNull()
-                .hasSize(1000);
+        assertThat(articleRepository.count()).isEqualTo(previousCount+1);
 
     }
 

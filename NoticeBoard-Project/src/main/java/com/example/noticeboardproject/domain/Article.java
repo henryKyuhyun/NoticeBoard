@@ -1,6 +1,8 @@
 package com.example.noticeboardproject.domain;
 
 import com.example.noticeboardproject.config.JpaConfig;
+import com.example.noticeboardproject.dto.ArticleDto;
+import com.example.noticeboardproject.dto.UserAccountDto;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -28,11 +30,13 @@ import java.util.Set;
 })
 @EntityListeners(AuditingEntityListener.class)
 @Entity
-public class Article {
+public class Article extends AuditingFields{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Setter @ManyToOne(optional = false) private UserAccount userAccount;   // User정보(ID)
 
     @Setter @Column(nullable = false) private String title;
     @Setter @Column(nullable = false, length = 10000)private String content;
@@ -41,9 +45,10 @@ public class Article {
     //밑의 용도 -> list, set, map 으로 해도되고 용도에따라다름, 이 아티클에 연동되어있는 커멘트는 중복을 허용하지않고 모아서 컬렉션으로 보겠다는 의미
 
     @ToString.Exclude
-    @OrderBy("id")
+    @OrderBy("createdAt DESC")
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL)
-    private final Set<ArticleComment> articleComments= new LinkedHashSet<>();
+    private final Set<ArticleComment> articleComments = new LinkedHashSet<>();
+
 
     @CreatedDate @Column(nullable = false) private LocalDateTime createdAt;
     @CreatedBy @Column(nullable = false,length = 100) private String createdBy;
@@ -54,14 +59,19 @@ public class Article {
 //    jpa entity 는 기본생성자를 가지고 있어야한다.
     protected Article(){};
 
-    private Article(String title, String content, String hashTag) {
+    private Article(UserAccount userAccount, String title, String content, String hashTag) {
+        this.userAccount = userAccount;
         this.title = title;
         this.content = content;
         this.hashTag = hashTag;
     }
 //밑의 팩토링메소드를 통해서 new키워드를 사용안해도 사용할 수 있게 한거다.
-    public static Article of(String title, String content, String hashTag) {
-        return new Article(title, content, hashTag);
+public static ArticleDto of(UserAccountDto userAccountDto, String title, String content, Set<HashtagDto> hashtagDtos) {
+    return new ArticleDto(null, userAccountDto, title, content, hashtagDtos, null, null, null, null);
+}
+
+    public static ArticleDto of(Long id, UserAccountDto userAccountDto, String title, String content, Set<HashtagDto> hashtagDtos, LocalDateTime createdAt, String createdBy, LocalDateTime modifiedAt, String modifiedBy) {
+        return new ArticleDto(id, userAccountDto, title, content, hashtagDtos, createdAt, createdBy, modifiedAt, modifiedBy);
     }
 
     @Override
