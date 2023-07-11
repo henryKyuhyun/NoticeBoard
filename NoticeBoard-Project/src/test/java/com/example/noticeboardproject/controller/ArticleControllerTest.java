@@ -4,6 +4,7 @@ import com.example.noticeboardproject.config.SecurityConfig;
 import com.example.noticeboardproject.dto.ArticleWithCommentsDto;
 import com.example.noticeboardproject.dto.UserAccountDto;
 import com.example.noticeboardproject.service.ArticleService;
+import com.example.noticeboardproject.service.PaginationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,15 +12,17 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -33,6 +36,7 @@ class ArticleControllerTest {
     private final MockMvc mvc;
 
     @MockBean private ArticleService articleService;
+    @MockBean private PaginationService paginationService;
 
 
     public ArticleControllerTest(@Autowired MockMvc mvc) {
@@ -45,17 +49,49 @@ class ArticleControllerTest {
     public void givenNothing_whenRequestingArticlesView_thenReturnArticlesView() throws Exception {
 //        Given
         given(articleService.searchArticles(eq(null), eq(null), any(Pageable.class))).willReturn(Page.empty());
+        given(paginationService.getPaginationBarNumbers(anyInt(),anyInt())).willReturn(List.of(1,2,3,4));
+
 //        When&Then
         mvc.perform(get("/articles"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(view().name("articles/index"))
-                .andExpect(model().attributeExists("articles"));
+                .andExpect(model().attributeExists("articles"))
+                .andExpect(model().attributeExists("paginationBarNumbers"));
         then(articleService).should().searchArticles(eq(null), eq(null), any(Pageable.class));
+        then(paginationService).should().getPaginationBarNumbers(anyInt(),anyInt());
 
     }
 
 
+    @DisplayName("[view][GET] 게시글 리스트 (게시판) 페이지 - 정렬 기능")
+    @Test
+    public void givenPagingAndSortingParams_whenSearchingArticlesPages_thenReturnArticlesView() throws Exception {
+//        Given
+
+        String sortName = "title";
+        String direction ="desc";
+        int pageNumber = 0;
+        int pageSize = 5;
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Order.desc(sortName)));
+        List<Integer> barNumbers = List.of(1,2,3,4,5);
+
+
+        given(articleService.searchArticles(eq(null), eq(null), any(Pageable.class))).willReturn(Page.empty());
+        given(paginationService.getPaginationBarNumbers(anyInt(),anyInt())).willReturn(List.of(1,2,3,4));
+
+//        When&Then
+        mvc.perform(get("/articles"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(view().name("articles/index"))
+                .andExpect(model().attributeExists("articles"))
+                .andExpect(model().attributeExists("paginationBarNumbers"));
+        then(articleService).should().searchArticles(eq(null), eq(null), any(Pageable.class));
+        then(paginationService).should().getPaginationBarNumbers(anyInt(),anyInt());
+
+    }
     @DisplayName("[view][GET] 게시글 상세페이지 - 정상 호출")
     @Test
     public void givenNothing_whenRequestingArticleView_thenReturnArticleView() throws Exception {
@@ -63,7 +99,7 @@ class ArticleControllerTest {
         Long articleId = 1L;
         given(articleService.getArticle(articleId)).willReturn(createArticleWithCommentsDto());
 //        When&Then
-        mvc.perform(get("/articles/1" + articleId))
+        mvc.perform(get("/articles/" + articleId))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.TEXT_HTML))
                 .andExpect(view().name("articles/detail"))
@@ -124,4 +160,3 @@ class ArticleControllerTest {
         );
     }
     }
-}

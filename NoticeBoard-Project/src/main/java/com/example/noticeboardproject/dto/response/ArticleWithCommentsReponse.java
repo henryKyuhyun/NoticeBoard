@@ -12,6 +12,7 @@ import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+
 public record ArticleWithCommentsResponse(
         Long id,
         String title,
@@ -38,10 +39,7 @@ public record ArticleWithCommentsResponse(
                 dto.id(),
                 dto.title(),
                 dto.content(),
-                dto.hashtagDtos().stream()
-                        .map(HashtagDto::hashtagName)
-                        .collect(Collectors.toUnmodifiableSet())
-                ,
+                dto.hashtag(),
                 dto.createdAt(),
                 dto.userAccountDto().email(),
                 nickname,

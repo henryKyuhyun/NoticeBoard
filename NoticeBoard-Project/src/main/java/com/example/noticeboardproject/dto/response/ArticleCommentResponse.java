@@ -2,6 +2,7 @@ package com.example.noticeboardproject.dto.response;
 
 
 import com.example.noticeboardproject.dto.ArticleCommentDto;
+import com.example.noticeboardproject.dto.ArticleWithCommentsDto;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -35,19 +36,15 @@ public record ArticleCommentResponse(
             nickname = dto.userAccountDto().userId();
         }
 
-        return ArticleCommentResponse(
+        return ArticleCommentResponse.of(
                 dto.id(),
                 dto.content(),
                 dto.createdAt(),
                 dto.userAccountDto().email(),
                 nickname,
-                dto.articleCommentDtos().stream() Stream<ArticleCommentDto>
-                .map(ArticleCommentResponse::from) Stream<ArticleCommentDto>
+                dto.userAccountDto().userId(),
+                dto.parentCommentId()
         );
-    }
 
-    public boolean hasParentComment() {
-        return parentCommentId != null;
     }
-
 }

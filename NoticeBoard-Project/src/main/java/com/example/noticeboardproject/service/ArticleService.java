@@ -3,8 +3,6 @@ package com.example.noticeboardproject.service;
 import com.example.noticeboardproject.domain.Article;
 import com.example.noticeboardproject.domain.type.SearchType;
 import com.example.noticeboardproject.dto.ArticleDto;
-import com.example.noticeboardproject.dto.ArticleUpdateDto;
-import com.example.noticeboardproject.dto.ArticleWithCommentDto;
 import com.example.noticeboardproject.dto.ArticleWithCommentsDto;
 import com.example.noticeboardproject.repository.ArticleRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +27,7 @@ public class ArticleService {
     @Transactional(readOnly = true) // Searching 은 Reading 하는 거고 변경하는게 아니기떄문에 readOnly 값을 준다.
     public Page<ArticleDto> searchArticles(SearchType searchType, String searchKeyword, Pageable pageable) {
         if(searchKeyword == null || searchKeyword.isBlank()){
-            return articleRepository.findAll(pageable).map(ArticleDto::from)
+            return articleRepository.findAll(pageable).map(ArticleDto::from);
         }
 
 
