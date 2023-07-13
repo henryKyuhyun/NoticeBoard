@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 //import static org.junit.jupiter.api.Assertions.*;
 import javax.persistence.EntityNotFoundException;
@@ -36,29 +37,92 @@ class ArticleServiceTest {
     @Mock private UserAccountRepository userAccountRepository;
 
 
-    @DisplayName("게시글을 검색하면, 게시글 리스트를 반환한다.")
+    @DisplayName("검색어 없이 게시글을 검색하면, 게시글 페이지를 반환한다.")
     @Test
-    void givenSearchParameters_whenSearchingArticles_thenReturnsArticleList(){
+    void givenSearchParameters_whenSearchingArticles_thenReturnsArticlePage(){
 //        Given
-
+        Pageable pageable = Pageable.ofSize(20);
+        given(articleRepository.findAll(pageable)).willReturn(Page.empty());
 //        When
-        Page<ArticleDto> articles = sut.searchArticles(SearchType.TITLE, "search keyword");   // 제목, 본문, ID, 닉네임, 해시테그
+        Page<ArticleDto> articles = sut.searchArticles(null,null,pageable);
 //        Then
-        assertThat(articles).isNotNull();
+        assertThat(articles).isEmpty();
+        BDDMockito.then(articleRepository).should().findAll(pageable);
     }
 
-    @DisplayName("게시글을 조회하면, 게시글을 반환한다.")
+
+    @DisplayName("검색어와 함께 게시글을 검색하면, 게시글 페이지를 반환한다.")
     @Test
-    void givenId_whenSearchingArticle_thenReturnsArticle(){
+    void givenSearchingParameters_whenSearchingArticles_thenReturnsArticlePage(){
 //        Given
-        Long articleId = 1L;
-        Article article = createArticle();
-        given(articleRepository.findById(articleId)).willReturn(Optional.of())
+        SearchType searchType = SearchType.TITLE;
+        String searchKeyword = "title";
+        Pageable pageable = Pageable.ofSize(20);
+        given(articleRepository.findByTitleContaining(searchKeyword, pageable)).willReturn(Page.empty());
 //        When
-        ArticleDto articles = sut.searchArticle(1L);
+        Page<ArticleDto> articles = sut.searchArticles(searchType,searchKeyword,pageable);
 //        Then
-        assertThat(articles).isNotNull();
+        assertThat(articles).isEmpty();
+        BDDMockito.then(articleRepository).should().findByTitleContaining(searchKeyword,pageable);
     }
+
+    @DisplayName("검색어 없이 게시글을 해시태그 검색하면, 빈 페이지를 반환한다.")
+    @Test
+   void givenNoSearchParameters_whenSearchingArticlesViaHastag_thenReturnsEmptyPage(){
+//        Given
+        Pageable pageable = Pageable.ofSize(20);
+//        When
+        Page<ArticleDto> articles = sut.searchArticlesViaHashtag(null,pageable);
+//        Then
+        assertThat(articles).isEqualTo(Page.empty(pageable));
+        BDDMockito.then(articleRepository).shouldHaveNoInteractions();
+    }
+
+    @DisplayName(" 게시글을 해시태그 검색하면, 게시글 페이지를 반환한다.")
+    @Test
+    void givenHashtag_whenSearchingArticlesViaHashtag_thenReturnsArticlesPage(){
+//        Given
+        String hashtag= "#java";
+        Pageable pageable = Pageable.ofSize(20);
+        given(articleRepository.findByHashtag(hashtag, pageable)).willReturn(Page.empty(pageable));
+//        When
+        Page<ArticleDto> articles = sut.searchArticlesViaHashtag(hashtag,pageable);
+//        Then
+        assertThat(articles).isEqualTo(Page.empty(pageable));
+        BDDMockito.then(articleRepository).should().findByHashtag(hashtag,pageable);
+    }
+
+
+
+
+    @DisplayName("게시글을 수를 조회하면, 게시글 수를 반환한다.")
+    @Test
+    void givenNothing_whenCountingArticles_thenReturnsArticlesCount(){
+//        Given
+        Long expected = 0L;
+        given(articleRepository.count()).willReturn(expected)
+//        When
+        long actual = sut.getArticleCount();
+//        Then
+        assertThat(actual).isEqualTo(expected);
+        BDDMockito.then(articleRepository).should().count();
+    }
+
+    @DisplayName("해시태그를 조회하면, 유니크 해시태그 리스트를 반환한다.")
+    @Test
+    void givenNothing_whenCalling_thenReturnsHashtags(){
+//        Given
+        List<String> expectedHashtags = List.of("#java","#spring","#boot");
+        given(articleRepository.findAllDistinctHashtags()).willReturn(expectedHashtags);
+
+//        When
+        List<String> actualHashtags = sut.getHashtags();
+
+//        Then
+        assertThat(actualHashtags).isEqualTo(expectedHashtags);
+        BDDMockito.then(articleRepository).should().findAllDistinctHashtags();
+    }
+
 
     @DisplayName("없는 게시글을 조회하면, 예외를 던진다.")
     @Test

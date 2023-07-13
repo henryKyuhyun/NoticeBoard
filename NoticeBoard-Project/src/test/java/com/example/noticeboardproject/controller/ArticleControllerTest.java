@@ -1,6 +1,7 @@
 package com.example.noticeboardproject.controller;
 
 import com.example.noticeboardproject.config.SecurityConfig;
+import com.example.noticeboardproject.domain.type.SearchType;
 import com.example.noticeboardproject.dto.ArticleWithCommentsDto;
 import com.example.noticeboardproject.dto.UserAccountDto;
 import com.example.noticeboardproject.service.ArticleService;
@@ -63,6 +64,30 @@ class ArticleControllerTest {
 
     }
 
+    @DisplayName("[view][GET] 게시글 리스트 (게시판) 페이지 - 검색어와 함께 호출")
+    @Test
+    public void givenSearching_whenSearchingArticlesView_thenReturnsArticlesView() throws Exception {
+//        Given
+        SearchType searchType = SearchType.TITLE;
+        String searchValue = "title";
+        given(articleService.searchArticles(eq(searchType), eq(searchValue), any(Pageable.class))).willReturn(Page.empty());
+        given(paginationService.getPaginationBarNumbers(anyInt(),anyInt())).willReturn(List.of(1,2,3,4));
+
+//        When&Then
+        mvc.perform(get("/articles")
+                        .queryParam("searchType", searchValue.toString())
+                        .queryParam("searchValue", searchValue)
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(view().name("articles/index"))
+                .andExpect(model().attributeExists("articles"))
+                .andExpect(model().attributeExists("searchTypes"));
+        then(articleService).should().searchArticles(eq(searchType), eq(searchValue), any(Pageable.class));
+        then(paginationService).should().getPaginationBarNumbers(anyInt(),anyInt());
+
+    }
+
 
     @DisplayName("[view][GET] 게시글 리스트 (게시판) 페이지 - 정렬 기능")
     @Test
@@ -116,7 +141,8 @@ class ArticleControllerTest {
         mvc.perform(get("/articles/search"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.TEXT_HTML))
-                .andExpect(model().attributeExists("articles/search"));
+                .andExpect(view().name("articles/search"));
+
 
     }
 
@@ -124,11 +150,36 @@ class ArticleControllerTest {
     @Test
     public void givenNothing_whenRequestingArticleHashTagSearchView_thenReturnArticleHashTagSearchView() throws Exception {
 //        Given
+        given(articleService.searchArticlesViaHashtag(eq(null),any(Pageable.class))).willReturn(Page.empty());
 //        When&Then
         mvc.perform(get("/articles/search-hashtag"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.TEXT_HTML))
-                .andExpect(model().attributeExists("articles/search-hashtag"));
+                .andExpect(view().name("articles/search-hashtag"))
+                .andExpect(model().attribute("articles",Page.empty()))
+                .andExpect(model().attributeExists("hashtag"))
+                .andExpect(model().attributeExists("paginationBarNumber"));
+        then(articleService).should().searchArticlesViaHashtag(eq(null),any(Pageable.class));
+
+    }
+
+    @DisplayName("[view][GET] 게시글 해시테그 검색 페이지 - 정상 호출, 해시태그 입력")
+    @Test
+    public void givenHashtag_whenRequestingArticleHashTagSearchView_thenReturnArticleHashTagSearchView() throws Exception {
+//        Given
+        String hashtag = "#java";
+        given(articleService.searchArticlesViaHashtag(eq(hashtag),any(Pageable.class))).willReturn(Page.empty());
+//        When&Then
+        mvc.perform(get("/articles/search-hashtag")
+                        .queryParam("searchValue",hashtag))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.TEXT_HTML))
+                .andExpect(view().name("articles/search-hashtag"))
+                .andExpect(model().attribute("articles",Page.empty()))
+                .andExpect(model().attributeExists("hashtag"))
+                .andExpect(model().attributeExists("paginationBarNumber"));
+        then(articleService).should().searchArticlesViaHashtag(eq(hashtag),any(Pageable.class));
+
     }
 
     private ArticleWithCommentsDto createArticleWithCommentsDto(){
