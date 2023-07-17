@@ -2,10 +2,13 @@ package com.example.noticeboardproject.controller;
 
 import com.example.noticeboardproject.config.SecurityConfig;
 import com.example.noticeboardproject.domain.type.SearchType;
+import com.example.noticeboardproject.dto.ArticleDto;
 import com.example.noticeboardproject.dto.ArticleWithCommentsDto;
 import com.example.noticeboardproject.dto.UserAccountDto;
+import com.example.noticeboardproject.dto.request.ArticleRequest;
 import com.example.noticeboardproject.service.ArticleService;
 import com.example.noticeboardproject.service.PaginationService;
+import com.example.noticeboardproject.util.FormDataEncoder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +27,9 @@ import java.util.List;
 import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @DisplayName("View Controller")
@@ -38,6 +41,8 @@ class ArticleControllerTest {
 
     @MockBean private ArticleService articleService;
     @MockBean private PaginationService paginationService;
+
+    @MockBean private FormDataEncoder formDataEncoder;
 
 
     public ArticleControllerTest(@Autowired MockMvc mvc) {
@@ -191,6 +196,28 @@ class ArticleControllerTest {
         then(paginationService).should().getPaginationBarNumbers(anyInt(),anyInt());
 
     }
+
+//    @WithUserDetails(value = "unoTest", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("[view][POST] 새 게시글 등록 - 정상 호출")
+    @Test
+    void givenNewArticleInfo_whenRequesting_thenSavesNewArticle() throws Exception {
+        // Given
+        ArticleRequest articleRequest = ArticleRequest.of("new title", "new content");
+        willDoNothing().given(articleService).saveArticle(any(ArticleDto.class));
+
+        // When & Then
+        mvc.perform(
+                        post("/articles/form")
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                                .content(formDataEncoder.encode(articleRequest))
+                                .with(csrf())
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(view().name("redirect:/articles"))
+                .andExpect(redirectedUrl("/articles"));
+        then(articleService).should().saveArticle(any(ArticleDto.class));
+    }
+
 
     private ArticleWithCommentsDto createArticleWithCommentsDto(){
         return ArticleWithCommentsDto.of(
