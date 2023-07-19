@@ -7,15 +7,20 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.AuditorAware;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 
 //Slice Test 를 할꺼임
 @DisplayName("JPA 연결 테스트")
-@Import(JpaConfig.class) //-> jpaConfig 의 존재를 모르기때문에(내가 만든거기떄문) 저걸 입력해야함
+@Import(JpaRepositoryTest.class) //-> jpaConfig 의 존재를 모르기때문에(내가 만든거기떄문) 저걸 입력해야함
 @DataJpaTest
 class JpaRepositoryTest {
 
@@ -94,5 +99,14 @@ class JpaRepositoryTest {
 //        Then
         assertThat(articleRepository.count()).isEqualTo((previousArticleCount - 1));
         assertThat(articleCommentRepository.count()).isEqualTo(previousArticleCommentCount - deletedCommentSize);
+    }
+
+    @EnableJpaAuditing
+    @TestConfiguration
+    public static class TestJpaConfig {
+        @Bean
+        public AuditorAware<String> auditorAware(){
+            return () -> Optional.of("kyuhyun");
+        }
     }
 }

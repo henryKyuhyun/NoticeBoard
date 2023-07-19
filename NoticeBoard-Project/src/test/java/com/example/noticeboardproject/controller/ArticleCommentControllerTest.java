@@ -1,65 +1,114 @@
 package com.example.noticeboardproject.controller;
 
-import com.example.noticeboardproject.config.SecurityConfig;
+import com.example.noticeboardproject.config.TestSecurityConfig;
 import com.example.noticeboardproject.dto.ArticleCommentDto;
 import com.example.noticeboardproject.dto.request.ArticleCommentRequest;
 import com.example.noticeboardproject.service.ArticleCommentService;
 import com.example.noticeboardproject.util.FormDataEncoder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.assertj.core.api.Assertions.*;
+import java.util.Map;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@DisplayName("VIEW 컨트롤러 - 댓글")
-@Import({SecurityConfig.class, FormDataEncoder.class})
+@DisplayName("View 컨트롤러 - 댓글")
+@Import({TestSecurityConfig.class, FormDataEncoder.class})
 @WebMvcTest(ArticleCommentController.class)
 class ArticleCommentControllerTest {
 
     private final MockMvc mvc;
+
     private final FormDataEncoder formDataEncoder;
 
     @MockBean private ArticleCommentService articleCommentService;
 
-    public ArticleCommentControllerTest(
+
+    ArticleCommentControllerTest(
             @Autowired MockMvc mvc,
             @Autowired FormDataEncoder formDataEncoder
-    ){
+    ) {
         this.mvc = mvc;
         this.formDataEncoder = formDataEncoder;
     }
 
-    @DisplayName("[View][POST] 댓글 등록 - 정상 호출")
+
+//    @WithUserDetails(value = "unoTest", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("[view][POST] 댓글 등록 - 정상 호출")
     @Test
-    void givenArticleCommentInfo_whenRequesting_thenSavesNewArticleComment(){
-//        Given
+    void givenArticleCommentInfo_whenRequesting_thenSavesNewArticleComment() throws Exception {
+        // Given
         long articleId = 1L;
         ArticleCommentRequest request = ArticleCommentRequest.of(articleId, "test comment");
-        BDDMockito.willDoNothing().given(articleCommentService).saveArticleComment(any(ArticleCommentDto.class));
+        willDoNothing().given(articleCommentService).saveArticleComment(any(ArticleCommentDto.class));
 
-//      when&then
+        // When & Then
         mvc.perform(
-                post("/comments/new")
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .content(formDataEncoder.encode(request))
-                        .with(csrf())
-        )
+                        post("/comments/new")
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                                .content(formDataEncoder.encode(request))
+//                                .with(csrf())
+                )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(view().name("redirection:/articles/" + articleId))
+                .andExpect(view().name("redirect:/articles/" + articleId))
                 .andExpect(redirectedUrl("/articles/" + articleId));
         then(articleCommentService).should().saveArticleComment(any(ArticleCommentDto.class));
+    }
 
+//    @WithUserDetails(value = "unoTest", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("[view][GET] 댓글 삭제 - 정상 호출")
+    @Test
+    void givenArticleCommentIdToDelete_whenRequesting_thenDeletesArticleComment() throws Exception {
+        // Given
+        long articleId = 1L;
+        long articleCommentId = 1L;
+        String userId = "unoTest";
+        willDoNothing().given(articleCommentService).deleteArticleComment(articleCommentId, userId);
+
+        // When & Then
+        mvc.perform(
+                        post("/comments/" + articleCommentId + "/delete")
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                                .content(formDataEncoder.encode(Map.of("articleId", articleId)))
+//                                .with(csrf())
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(view().name("redirect:/articles/" + articleId))
+                .andExpect(redirectedUrl("/articles/" + articleId));
+        then(articleCommentService).should().deleteArticleComment(articleCommentId, userId);
+    }
+
+//    @WithUserDetails(value = "unoTest", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("[view][POST] 대댓글 등록 - 정상 호출")
+    @Test
+    void givenArticleCommentInfoWithParentCommentId_whenRequesting_thenSavesNewChildComment() throws Exception {
+        // Given
+        long articleId = 1L;
+        ArticleCommentRequest request = ArticleCommentRequest.of(articleId, 1L, "test comment");
+        willDoNothing().given(articleCommentService).saveArticleComment(any(ArticleCommentDto.class));
+
+        // When & Then
+        mvc.perform(
+                        post("/comments/new")
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                                .content(formDataEncoder.encode(request))
+//                                .with(csrf())
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(view().name("redirect:/articles/" + articleId))
+                .andExpect(redirectedUrl("/articles/" + articleId));
+        then(articleCommentService).should().saveArticleComment(any(ArticleCommentDto.class));
     }
 
 }
