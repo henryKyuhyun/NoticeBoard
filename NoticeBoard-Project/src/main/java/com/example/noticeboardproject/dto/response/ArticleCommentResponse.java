@@ -43,8 +43,7 @@ public record ArticleCommentResponse(
                 dto.createdAt(),
                 dto.userAccountDto().email(),
                 nickname,
-                dto.userAccountDto().userId(),
-                dto.parentCommentId()
+                dto.userAccountDto().userId()
         );
 
     }

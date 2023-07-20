@@ -95,7 +95,7 @@ class ArticleCommentControllerTest {
     void givenArticleCommentInfoWithParentCommentId_whenRequesting_thenSavesNewChildComment() throws Exception {
         // Given
         long articleId = 1L;
-        ArticleCommentRequest request = ArticleCommentRequest.of(articleId, 1L, "test comment");
+        ArticleCommentRequest request = ArticleCommentRequest.of(articleId,  "test comment");
         willDoNothing().given(articleCommentService).saveArticleComment(any(ArticleCommentDto.class));
 
         // When & Then
