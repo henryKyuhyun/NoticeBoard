@@ -1,7 +1,7 @@
 package com.example.noticeboardproject.domain;
 
-import com.example.noticeboardproject.config.JpaConfig;
 import com.example.noticeboardproject.dto.ArticleDto;
+import com.example.noticeboardproject.dto.HashtagDto;
 import com.example.noticeboardproject.dto.UserAccountDto;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +13,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -36,7 +35,7 @@ public class Article extends AuditingFields{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Setter @ManyToOne(optional = false) private UserAccount userAccount;   // User정보(ID)
+    @Setter @ManyToOne(optional = false) @JoinColumn(name = "userId") private UserAccount userAccount;   // User정보(ID)
 
     @Setter @Column(nullable = false) private String title;
     @Setter @Column(nullable = false, length = 10000)private String content;
@@ -66,12 +65,12 @@ public class Article extends AuditingFields{
         this.hashTag = hashTag;
     }
 //밑의 팩토링메소드를 통해서 new키워드를 사용안해도 사용할 수 있게 한거다.
-public static ArticleDto of(UserAccountDto userAccountDto, String title, String content, Set<HashtagDto> hashtagDtos) {
-    return new ArticleDto(null, userAccountDto, title, content, hashtagDtos, null, null, null, null);
+public static ArticleDto of(UserAccountDto userAccountDto, String title, String content, String hashtag) {
+    return new ArticleDto(null, userAccountDto, title, content, hashtag, null, null, null, null);
 }
 
-    public static ArticleDto of(Long id, UserAccountDto userAccountDto, String title, String content, Set<HashtagDto> hashtagDtos, LocalDateTime createdAt, String createdBy, LocalDateTime modifiedAt, String modifiedBy) {
-        return new ArticleDto(id, userAccountDto, title, content, hashtagDtos, createdAt, createdBy, modifiedAt, modifiedBy);
+    public static ArticleDto of(Long id, UserAccountDto userAccountDto, String title, String content, String hashtag, LocalDateTime createdAt, String createdBy, LocalDateTime modifiedAt, String modifiedBy) {
+        return new ArticleDto(id, userAccountDto, title, content, hashtag, createdAt, createdBy, modifiedAt, modifiedBy);
     }
 
     @Override
@@ -79,10 +78,12 @@ public static ArticleDto of(UserAccountDto userAccountDto, String title, String 
         if (this == o) return true;
         if (!(o instanceof Article article)) return false;
         return id != null && id.equals(article.id);
+//        return this.getId() != null && this.getId().equals(tat)
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+//        return Objects.hash(id);
+        return Objects.hash(this.getId());
     }
 }

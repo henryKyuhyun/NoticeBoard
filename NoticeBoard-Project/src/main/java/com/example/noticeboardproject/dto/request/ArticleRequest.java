@@ -1,7 +1,10 @@
 package com.example.noticeboardproject.dto.request;
 
 import com.example.noticeboardproject.dto.ArticleDto;
+import com.example.noticeboardproject.dto.HashtagDto;
 import com.example.noticeboardproject.dto.UserAccountDto;
+
+import java.util.Set;
 
 public record ArticleRequest(
         String title,
@@ -16,7 +19,7 @@ public record ArticleRequest(
         return toDto(userAccountDto, null);
     }
 
-    public ArticleDto toDto(UserAccountDto userAccountDto, Set<HashtagDto> hashtagDtos) {
+    public ArticleDto toDto(UserAccountDto userAccountDto, String hashtagDtos) {
         return ArticleDto.of(
                 userAccountDto,
                 title,

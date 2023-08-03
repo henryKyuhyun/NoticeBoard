@@ -32,6 +32,12 @@ public class ArticleComment {
 
     @Setter @ManyToOne(optional = false) private Article article; // 게시글(ID)
 //    @Setter private Long article; 이렇게해도 연관관계 조인 할 수 있음
+
+    @Setter
+    @ManyToOne(optional = false)
+    @JoinColumn
+    private UserAccount userAccount;
+
     @Setter @Column(nullable = false, length = 500) private String content;
     @CreatedDate
     @Column(nullable = false) private LocalDateTime createdAt;
@@ -59,12 +65,14 @@ public class ArticleComment {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ArticleComment that)) return false;
-        return id.equals(that.id);
+//        return id.equals(that.id);
+        return this.getId() != null && this.getId().equals(that.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+//        return Objects.hash(id);
+        return Objects.hash(this.getId());
     }
 
 
